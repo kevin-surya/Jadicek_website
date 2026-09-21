@@ -59,10 +59,10 @@ class ModelService:
     @staticmethod
     def label(score):
         if score < 0.35:
-            return "Indikasi model rendah"
+            return "Cenderung rendah"
         if score < 0.65:
-            return "Indikasi model sedang"
-        return "Indikasi model tinggi"
+            return "Perlu diperhatikan"
+        return "Sebaiknya ditindaklanjuti"
 
     def predict(self, payload):
         features = self.prepare(payload)

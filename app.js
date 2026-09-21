@@ -68,7 +68,7 @@ form.addEventListener('submit', async e => {
   next.textContent = 'Memproses…';
   const input = getInput();
   let prediction = null;
-  let message = 'Layanan model belum terhubung. Ringkasan Anda tersedia; prediksi diabetes dan jantung belum dapat dihitung.';
+  let message = 'Kami belum dapat menghitung hasil kesehatan Anda saat ini. Jawaban Anda tetap tersimpan di halaman ini dan Anda dapat mencobanya lagi nanti.';
   try {
     let data = await predictFromSpace(input.payload);
     if (!data) {
@@ -79,17 +79,17 @@ form.addEventListener('submit', async e => {
       });
       if (response.ok) data = await response.json();
       else if (response.status !== 503 && response.status !== 404 && response.status !== 405) {
-        message = 'Layanan prediksi sedang mengalami kendala. Ringkasan Anda tetap tersedia. Silakan coba kembali.';
+        message = 'Hasil kesehatan Anda belum dapat dihitung karena terjadi gangguan sementara. Silakan coba kembali beberapa saat lagi.';
       }
     }
     if (data) {
       if (typeof data.diabetes_result !== 'string' || typeof data.heart_result !== 'string') throw new Error('format');
       prediction = {diabetes_result:data.diabetes_result, heart_result:data.heart_result,
         diabetes_score:data.diabetes_score, heart_score:data.heart_score};
-      message = 'Prediksi diterima dari layanan model. Hasil ini bukan diagnosis medis.';
+      message = 'Hasil ini membantu Anda mengenali hal yang mungkin perlu diperhatikan. Ini bukan diagnosis medis.';
     }
   } catch (error) {
-    message = 'Layanan prediksi tidak dapat dihubungi atau format hasilnya tidak sesuai. Ringkasan Anda tetap tersedia.';
+    message = 'Kami belum dapat menampilkan hasil kesehatan Anda saat ini. Periksa koneksi internet, lalu coba kembali beberapa saat lagi.';
   } finally {
     next.disabled = false; back.disabled = false; showStep(false);
   }
@@ -105,9 +105,10 @@ function renderResult(message) {
     const value = el.tagName === 'SELECT' ? el.selectedOptions[0].textContent : el.value;
     return `<div><dt>${escapeText(label)}</dt><dd>${escapeText(value)}</dd></div>`;
   }).join('');
-  const diabetesScore = p && Number.isFinite(p.diabetes_score) ? ` · skor ${(p.diabetes_score * 100).toFixed(1)}%` : '';
-  const heartScore = p && Number.isFinite(p.heart_score) ? ` · skor ${(p.heart_score * 100).toFixed(1)}%` : '';
-  result.innerHTML = `<span class="result-badge">PEMERIKSAAN ANDA</span><h3>Satu langkah lebih mengenal diri.</h3><p>Berikut ringkasan berdasarkan informasi yang Anda berikan.</p><div class="result-grid"><div class="result-box"><span>Indeks massa tubuh</span><strong>${latest.payload.bmi.toFixed(2)}</strong><p>BMI = berat (kg) / tinggi (m)²</p></div><div class="result-box"><span>Status pemeriksaan</span><strong>${p ? 'Hasil tersedia' : 'Profil lengkap'}</strong><p>${p ? 'Terhubung ke model lokal' : 'Menunggu layanan model'}</p></div></div><div class="result-grid"><div class="result-box"><span>Diabetes${diabetesScore}</span><strong>${p ? escapeText(p.diabetes_result) : 'Belum tersedia'}</strong></div><div class="result-box"><span>Penyakit jantung${heartScore}</span><strong>${p ? escapeText(p.heart_result) : 'Belum tersedia'}</strong></div></div><div class="result-message">${escapeText(message)}</div><dl class="result-summary">${summary}</dl><p>Skor adalah probabilitas keluaran model untuk kelas penyakit, bukan persentase risiko klinis. Ringkasan ini tidak menggantikan pemeriksaan tenaga kesehatan.</p><div class="result-actions"><button class="button" id="download">Unduh ringkasan <span>↓</span></button><button class="button result-secondary" id="edit">Ubah jawaban</button><button class="back-button" id="reset">Mulai ulang</button></div>`;
+  const diabetesResult = getFriendlyResult(p && p.diabetes_score);
+  const heartResult = getFriendlyResult(p && p.heart_score);
+  const resultCard = (condition, healthResult) => `<div class="result-box"><span>${condition}</span><strong>${p ? healthResult.title : 'Belum dapat dihitung'}</strong><p>${p ? healthResult.description : 'Silakan coba kembali beberapa saat lagi.'}</p></div>`;
+  result.innerHTML = `<span class="result-badge">RINGKASAN ANDA</span><h3>Yuk, kenali kondisi kesehatan Anda.</h3><p>Kami merangkum jawaban Anda agar hasilnya lebih mudah dipahami.</p><div class="result-grid"><div class="result-box"><span>Indeks massa tubuh (BMI)</span><strong>${latest.payload.bmi.toFixed(2)}</strong><p>Perbandingan berat dan tinggi badan Anda.</p></div><div class="result-box"><span>Status hasil</span><strong>${p ? 'Sudah selesai' : 'Belum dapat dihitung'}</strong><p>${p ? 'Berikut hal yang dapat Anda perhatikan.' : 'Jawaban Anda tetap tersedia di halaman ini.'}</p></div></div><div class="result-grid">${resultCard('Diabetes', diabetesResult)}${resultCard('Penyakit jantung', heartResult)}</div><div class="result-message">${escapeText(message)}</div><dl class="result-summary">${summary}</dl><p class="result-disclaimer">Angka di atas menunjukkan tingkat kemiripan jawaban Anda dengan pola yang dipelajari sistem, bukan persentase risiko Anda terkena penyakit. Untuk mengetahui kondisi kesehatan secara pasti, konsultasikan dengan tenaga kesehatan.</p><div class="result-actions"><button class="button" id="download">Unduh ringkasan <span>↓</span></button><button class="button result-secondary" id="edit">Ubah jawaban</button><button class="back-button" id="reset">Mulai ulang</button></div>`;
   document.querySelector('#download').addEventListener('click', () => {
     const url = URL.createObjectURL(new Blob([JSON.stringify(latest, null, 2)], {type:'application/json'}));
     const link = document.createElement('a'); link.href = url; link.download = 'ringkasan-jadicek.json'; link.click();
@@ -116,6 +117,22 @@ function renderResult(message) {
   document.querySelector('#edit').addEventListener('click', () => restore(false));
   document.querySelector('#reset').addEventListener('click', () => restore(true));
   result.focus({preventScroll:true});
+}
+function getFriendlyResult(score) {
+  if (!Number.isFinite(score)) return {title: 'Hasil tersedia', description: 'Lihat ringkasan hasil pemeriksaan Anda.'};
+  const value = (score * 100).toFixed(1);
+  if (score < 0.35) return {
+    title: 'Cenderung rendah',
+    description: `Hasil perhitungan ${value}%. Pola jawaban Anda tidak menunjukkan banyak tanda yang berkaitan dengan kondisi ini.`
+  };
+  if (score < 0.65) return {
+    title: 'Perlu diperhatikan',
+    description: `Hasil perhitungan ${value}%. Ada beberapa tanda yang sebaiknya Anda perhatikan dan pantau.`
+  };
+  return {
+    title: 'Sebaiknya ditindaklanjuti',
+    description: `Hasil perhitungan ${value}%. Pertimbangkan untuk berkonsultasi dengan tenaga kesehatan.`
+  };
 }
 function restore(reset) {
   if (reset) {form.reset(); latest = null;}
