@@ -3,8 +3,6 @@
   "framework": null,
   "functions": {
     "api/predict.py": {
-      "includeFiles": "{models/**,model_service.py,notebook_pipeline.py}",
-      "excludeFiles": "{train_models.py,server.py,README.md,**/__pycache__/**,**/*.pyc}",
       "maxDuration": 30
     }
   },

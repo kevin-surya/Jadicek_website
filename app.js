@@ -1,35 +1,16 @@
 "use strict";
 
-async function predictFromSpace(payload) {
-  const spaceUrl = String(window.JADICEK_GRADIO_URL || '').replace(/\/$/, '');
-  if (!spaceUrl) return null;
-
-  const start = await fetch(`${spaceUrl}/gradio_api/call/predict`, {
+async function requestPrediction(payload) {
+  const apiBase = String(window.JADICEK_API_URL || '').replace(/\/$/, '');
+  const response = await fetch(`${apiBase}/api/predict`, {
     method: 'POST',
     headers: {'Content-Type': 'application/json'},
-    body: JSON.stringify({data: [payload]}),
-    signal: AbortSignal.timeout(30000)
-  });
-  if (!start.ok) throw new Error(`space-start-${start.status}`);
-
-  const {event_id: eventId} = await start.json();
-  if (!eventId) throw new Error('space-event-id');
-
-  const result = await fetch(`${spaceUrl}/gradio_api/call/predict/${encodeURIComponent(eventId)}`, {
+    body: JSON.stringify(payload),
     signal: AbortSignal.timeout(60000)
   });
-  if (!result.ok) throw new Error(`space-result-${result.status}`);
-
-  const stream = await result.text();
-  const complete = stream.match(/event: complete\r?\ndata: (.+)(?:\r?\n|$)/);
-  if (!complete) {
-    const failure = stream.match(/event: error\r?\ndata: (.+)(?:\r?\n|$)/);
-    if (failure) throw new Error('space-prediction-error');
-    throw new Error('space-response-format');
-  }
-
-  const data = JSON.parse(complete[1]);
-  return Array.isArray(data) ? data[0] : data;
+  const data = await response.json().catch(() => null);
+  if (!response.ok) throw new Error(data && data.error ? data.error : `api-${response.status}`);
+  return data;
 }
 
 const form = document.querySelector('#check-form');
@@ -88,16 +69,7 @@ form.addEventListener('submit', async e => {
   let prediction = null;
   let message = 'Kami belum dapat menghitung hasil kesehatan Anda saat ini. Jawaban Anda tetap tersimpan di halaman ini dan Anda dapat mencobanya lagi nanti.';
   try {
-    let data = await predictFromSpace(input.payload);
-    if (!data) {
-      const apiBase = String(window.JADICEK_API_URL || '').replace(/\/$/, '');
-      const response = await fetch(`${apiBase}/api/predict`, {
-        method:'POST', headers:{'Content-Type':'application/json'},
-        body:JSON.stringify(input.payload), signal:AbortSignal.timeout(30000)
-      });
-      if (response.ok) data = await response.json();
-      else throw new Error(`api-${response.status}`);
-    }
+    const data = await requestPrediction(input.payload);
     if (data) {
       if (typeof data.diabetes_result !== 'string' || typeof data.heart_result !== 'string') throw new Error('format');
       prediction = {diabetes_result:data.diabetes_result, heart_result:data.heart_result,
