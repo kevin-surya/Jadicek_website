@@ -121,9 +121,11 @@ window.JADICEK_API_URL = "";
 
 Kemudian redeploy Vercel. Pada cold start, function mengunduh hanya dua file `.joblib` dari Hub dan menyimpannya pada cache sementara. Untuk deployment yang stabil, ganti `HF_MODEL_REVISION` dengan commit hash Model Hub setelah model final.
 
-Space Gradio berjalan di CPU karena pipeline LightGBM tidak memerlukan GPU. Jangan
-menambahkan dekorator `@spaces.GPU` pada fungsi `predict`; dekorator tersebut memakai
-kuota ZeroGPU dan dapat membuat prediksi ditolak walaupun Space berstatus Running.
+Pipeline LightGBM tetap melakukan inferensi di CPU. Namun, akun gratis yang hanya
+dapat memakai hardware ZeroGPU mengharuskan fungsi Gradio terdaftar memakai dekorator
+`@spaces.GPU`. Karena prediksi setelah model dimuat berlangsung sangat singkat,
+`predict` memakai `@spaces.GPU(duration=1)` agar reservasi kuota per request minimal.
+Jika kuota ZeroGPU pengguna sudah habis, request tetap ditolak sampai kuota direset.
 
 Jika Space digunakan, isi `window.JADICEK_GRADIO_URL` di `config.js` dengan alamat
 `https://USERNAME-jadicek-api.hf.space`. Frontend memanggil endpoint Gradio
