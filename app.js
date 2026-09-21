@@ -1,3 +1,5 @@
+import { Client } from "https://cdn.jsdelivr.net/npm/@gradio/client@2.7.0/+esm";
+
 "use strict";
 const form = document.querySelector('#check-form');
 const fieldsets = [...form.querySelectorAll('fieldset')];
