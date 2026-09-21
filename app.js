@@ -1,5 +1,18 @@
 import { Client } from "https://cdn.jsdelivr.net/npm/@gradio/client@2.7.0/+esm";
 
+let spaceClientPromise = null;
+
+async function predictFromSpace(payload) {
+  const spaceId = String(window.JADICEK_SPACE_ID || '').trim();
+  if (!spaceId) return null;
+  if (!spaceClientPromise) spaceClientPromise = Client.connect(spaceId);
+  const client = await spaceClientPromise;
+  const response = await client.predict('/predict', {payload});
+  const data = Array.isArray(response.data) ? response.data[0] : response.data;
+  if (!data || typeof data !== 'object') throw new Error('format');
+  return data;
+}
+
 "use strict";
 const form = document.querySelector('#check-form');
 const fieldsets = [...form.querySelectorAll('fieldset')];
@@ -57,19 +70,23 @@ form.addEventListener('submit', async e => {
   let prediction = null;
   let message = 'Layanan model belum terhubung. Ringkasan Anda tersedia; prediksi diabetes dan jantung belum dapat dihitung.';
   try {
-    const apiBase = String(window.JADICEK_API_URL || '').replace(/\/$/, '');
-    const response = await fetch(`${apiBase}/api/predict`, {
-      method:'POST', headers:{'Content-Type':'application/json'},
-      body:JSON.stringify(input.payload), signal:AbortSignal.timeout(30000)
-    });
-    if (response.ok) {
-      const data = await response.json();
+    let data = await predictFromSpace(input.payload);
+    if (!data) {
+      const apiBase = String(window.JADICEK_API_URL || '').replace(/\/$/, '');
+      const response = await fetch(`${apiBase}/api/predict`, {
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body:JSON.stringify(input.payload), signal:AbortSignal.timeout(30000)
+      });
+      if (response.ok) data = await response.json();
+      else if (response.status !== 503 && response.status !== 404 && response.status !== 405) {
+        message = 'Layanan prediksi sedang mengalami kendala. Ringkasan Anda tetap tersedia. Silakan coba kembali.';
+      }
+    }
+    if (data) {
       if (typeof data.diabetes_result !== 'string' || typeof data.heart_result !== 'string') throw new Error('format');
       prediction = {diabetes_result:data.diabetes_result, heart_result:data.heart_result,
         diabetes_score:data.diabetes_score, heart_score:data.heart_score};
       message = 'Prediksi diterima dari layanan model. Hasil ini bukan diagnosis medis.';
-    } else if (response.status !== 503 && response.status !== 404 && response.status !== 405) {
-      message = 'Layanan prediksi sedang mengalami kendala. Ringkasan Anda tetap tersedia. Silakan coba kembali.';
     }
   } catch (error) {
     message = 'Layanan prediksi tidak dapat dihubungi atau format hasilnya tidak sesuai. Ringkasan Anda tetap tersedia.';
