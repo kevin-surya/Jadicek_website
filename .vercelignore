@@ -1,0 +1,7 @@
+__pycache__/
+*.pyc
+.venv/
+train_models.py
+server.py
+README.md
+catboost_info/

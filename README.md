@@ -44,3 +44,81 @@ Pipeline mereproduksi urutan sel aktif di `satria_data - Copy.ipynb`, termasuk p
 Angka sekitar 84% dan 93% pada notebook adalah akurasi/recall tertimbang pada target yang tidak seimbang. Nilai itu bukan recall kelas penyakit. `metrics.json` mencatat metrik notebook dan metrik khusus kelas penyakit secara terpisah. Skor API adalah probabilitas keluaran model untuk kelas penyakit, bukan risiko klinis.
 
 Server hanya mendengarkan localhost untuk pengembangan. Jika akan dipublikasikan, gunakan hosting HTTPS dan backend produksi yang sesuai. Input tidak disimpan oleh website; kebijakan penyimpanan API bergantung pada layanan yang Anda hubungkan.
+
+## Deploy ke Vercel
+
+Folder ini sudah memiliki `api/predict.py`, `vercel.json`, `.python-version`, dan dependensi runtime yang dipatok. Model `.joblib` di `models/` ikut masuk ke bundle Python Function. Training dilakukan secara lokal; Vercel hanya memuat artefak dan menjalankan inferensi.
+
+### Melalui GitHub
+
+1. Jadikan folder `jadicek-redesign` sebagai root repository, atau pilih folder tersebut sebagai **Root Directory** ketika mengimpor monorepo di Vercel.
+2. Push seluruh isi folder, termasuk `models/*.joblib`.
+3. Di Vercel pilih **Add New → Project**, impor repository, lalu pastikan **Framework Preset = Other**.
+4. Biarkan Build Command dan Output Directory kosong, kemudian deploy.
+5. Buka `https://domain-anda.vercel.app/api/predict`. Respons `status: ready` berarti model berhasil dimuat.
+6. Uji formulir pada halaman utama. Frontend sudah memakai URL relatif `/api/predict`, sehingga tidak memerlukan environment variable.
+
+### Melalui Vercel CLI
+
+```powershell
+cd jadicek-redesign
+npx vercel
+npx vercel --prod
+```
+
+Jawab root project dengan folder saat ini dan framework dengan **Other**. Perintah pertama membuat Preview Deployment; setelah diuji, perintah kedua menerbitkan Production Deployment.
+
+Python Function memiliki cold start karena perlu memuat pandas, scikit-learn, LightGBM, dan dua model. Jika build melaporkan function terlalu besar, aktifkan Fluid Compute dan tambahkan environment variable `VERCEL_SUPPORT_LARGE_FUNCTIONS=1`, lalu redeploy. Jangan mengunggah CSV training atau notebook ke function; keduanya tidak dibutuhkan saat prediksi.
+
+## Upload ke Hugging Face
+
+Tersedia dua folder siap unggah:
+
+- `huggingface-model/`: repository Model Hub untuk penyimpanan dan versioning artefak.
+- `huggingface-space/`: Docker Space FastAPI yang menjalankan model sebagai API.
+
+Pasang CLI dan login tanpa menaruh token di source code:
+
+```powershell
+python -m pip install -U huggingface_hub
+hf auth login
+```
+
+Buat model repository bernama `jadicek-model` melalui `https://huggingface.co/new`, lalu unggah:
+
+```powershell
+hf upload USERNAME/jadicek-model ./huggingface-model . --repo-type model
+```
+
+Buat Space bernama `jadicek-api` melalui `https://huggingface.co/new-space` dengan SDK **Docker**, lalu unggah:
+
+```powershell
+hf upload USERNAME/jadicek-api ./huggingface-space . --repo-type space
+```
+
+Setelah status Space **Running**, tes:
+
+```text
+https://USERNAME-jadicek-api.hf.space/health
+```
+
+### Alternatif gratis tanpa compute Space
+
+Static Space tidak dapat menjalankan Python. Untuk akun gratis, simpan model di Model Hub lalu biarkan Vercel Python Function menjalankan inferensi. Di **Vercel → Project Settings → Environment Variables**, tambahkan:
+
+```text
+HF_MODEL_REPO=USERNAME/jadicek-model
+HF_MODEL_REVISION=main
+```
+
+Untuk model repository public, tidak diperlukan token. Untuk repository private, tambahkan `HF_TOKEN` sebagai secret Vercel menggunakan token Hugging Face bertipe **Read**. Jangan memasukkan token ke `config.js`.
+
+Biarkan konfigurasi frontend tetap kosong agar browser memanggil Vercel:
+
+```js
+window.JADICEK_API_URL = "";
+```
+
+Kemudian redeploy Vercel. Pada cold start, function mengunduh hanya dua file `.joblib` dari Hub dan menyimpannya pada cache sementara. Untuk deployment yang stabil, ganti `HF_MODEL_REVISION` dengan commit hash Model Hub setelah model final.
+
+Docker Space tetap tersedia sebagai opsi berbayar. Jika Space digunakan, isi `config.js` dengan alamat `https://USERNAME-jadicek-api.hf.space`.

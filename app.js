@@ -55,7 +55,8 @@ form.addEventListener('submit', async e => {
   let prediction = null;
   let message = 'Layanan model belum terhubung. Ringkasan Anda tersedia; prediksi diabetes dan jantung belum dapat dihitung.';
   try {
-    const response = await fetch('/api/predict', {
+    const apiBase = String(window.JADICEK_API_URL || '').replace(/\/$/, '');
+    const response = await fetch(`${apiBase}/api/predict`, {
       method:'POST', headers:{'Content-Type':'application/json'},
       body:JSON.stringify(input.payload), signal:AbortSignal.timeout(30000)
     });
