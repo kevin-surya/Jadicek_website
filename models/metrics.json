@@ -1,0 +1,276 @@
+{
+  "trained_at": "2026-09-21T05:02:15.133987+00:00",
+  "notebook": "D:\\Perlombaan Duniawi\\satdat\\satdat 2025\\web\\satria_data - Copy.ipynb",
+  "source": "D:\\Perlombaan Duniawi\\satdat\\satdat 2025\\data_fix_satdat_2023.csv",
+  "clean_rows_before_task_dedup": 238693,
+  "diabetes_rows": 236764,
+  "heart_rows": 238693,
+  "label_semantics": {
+    "0": "condition present/history",
+    "1": "condition absent/borderline"
+  },
+  "selected_model": {
+    "diabetes": "LightGBM",
+    "heart": "LightGBM"
+  },
+  "diabetes": {
+    "XGBoost": {
+      "notebook_weighted": {
+        "accuracy": 0.8395455409372162,
+        "precision_weighted": 0.803395410451055,
+        "recall_weighted": 0.8395455409372162,
+        "f1_weighted": 0.799123519363513
+      },
+      "disease_class": {
+        "precision": 0.5519662921348315,
+        "recall": 0.15076726342710997,
+        "f1": 0.23684210526315788,
+        "roc_auc": 0.785609183509028,
+        "average_precision": 0.4164428288889253,
+        "confusion_matrix": [
+          [
+            38576,
+            957
+          ],
+          [
+            6641,
+            1179
+          ]
+        ]
+      }
+    },
+    "AdaBoost": {
+      "notebook_weighted": {
+        "accuracy": 0.8419529913627436,
+        "precision_weighted": 0.8091366585061203,
+        "recall_weighted": 0.8419529913627436,
+        "f1_weighted": 0.7978674503551932
+      },
+      "disease_class": {
+        "precision": 0.5942760942760943,
+        "recall": 0.1354219948849105,
+        "f1": 0.22057904603207665,
+        "roc_auc": 0.786837790604282,
+        "average_precision": 0.4217388821416348,
+        "confusion_matrix": [
+          [
+            38810,
+            723
+          ],
+          [
+            6761,
+            1059
+          ]
+        ]
+      }
+    },
+    "LightGBM": {
+      "notebook_weighted": {
+        "accuracy": 0.8412138618461343,
+        "precision_weighted": 0.8070839828534677,
+        "recall_weighted": 0.8412138618461343,
+        "f1_weighted": 0.798573438761819
+      },
+      "disease_class": {
+        "precision": 0.5785900783289817,
+        "recall": 0.14168797953964193,
+        "f1": 0.22763225475089882,
+        "roc_auc": 0.7902983848580514,
+        "average_precision": 0.42457614236630864,
+        "confusion_matrix": [
+          [
+            38726,
+            807
+          ],
+          [
+            6712,
+            1108
+          ]
+        ]
+      }
+    },
+    "CatBoost": {
+      "notebook_weighted": {
+        "accuracy": 0.8402424344814479,
+        "precision_weighted": 0.8050009765450353,
+        "recall_weighted": 0.8402424344814479,
+        "f1_weighted": 0.800148177571598
+      },
+      "disease_class": {
+        "precision": 0.5593299208934388,
+        "recall": 0.15370843989769822,
+        "f1": 0.24114755742802688,
+        "roc_auc": 0.788061480961582,
+        "average_precision": 0.4178078352790967,
+        "confusion_matrix": [
+          [
+            38586,
+            947
+          ],
+          [
+            6618,
+            1202
+          ]
+        ]
+      }
+    },
+    "Logistic Regression": {
+      "notebook_weighted": {
+        "accuracy": 0.8404958503157139,
+        "precision_weighted": 0.8053214115957809,
+        "recall_weighted": 0.8404958503157139,
+        "f1_weighted": 0.7957119675273524
+      },
+      "disease_class": {
+        "precision": 0.5758953951108584,
+        "recall": 0.12953964194373402,
+        "f1": 0.21150433239377806,
+        "roc_auc": 0.7854387037072139,
+        "average_precision": 0.41571410519714597,
+        "confusion_matrix": [
+          [
+            38787,
+            746
+          ],
+          [
+            6807,
+            1013
+          ]
+        ]
+      }
+    }
+  },
+  "heart": {
+    "XGBoost": {
+      "notebook_weighted": {
+        "accuracy": 0.9352102054923648,
+        "precision_weighted": 0.9031981177613856,
+        "recall_weighted": 0.9352102054923648,
+        "f1_weighted": 0.9065171760250316
+      },
+      "disease_class": {
+        "precision": 0.4166666666666667,
+        "recall": 0.017909475740801043,
+        "f1": 0.034342803621604745,
+        "roc_auc": 0.804322425733565,
+        "average_precision": 0.21392839595699342,
+        "confusion_matrix": [
+          [
+            44591,
+            77
+          ],
+          [
+            3016,
+            55
+          ]
+        ]
+      }
+    },
+    "AdaBoost": {
+      "notebook_weighted": {
+        "accuracy": 0.9352311527262825,
+        "precision_weighted": 0.9044084071559058,
+        "recall_weighted": 0.9352311527262825,
+        "f1_weighted": 0.9069823270232931
+      },
+      "disease_class": {
+        "precision": 0.432258064516129,
+        "recall": 0.02181699772061218,
+        "f1": 0.041537507749535026,
+        "roc_auc": 0.8128321750160676,
+        "average_precision": 0.22486384922625247,
+        "confusion_matrix": [
+          [
+            44580,
+            88
+          ],
+          [
+            3004,
+            67
+          ]
+        ]
+      }
+    },
+    "LightGBM": {
+      "notebook_weighted": {
+        "accuracy": 0.9356291501707199,
+        "precision_weighted": 0.9045795779422392,
+        "recall_weighted": 0.9356291501707199,
+        "f1_weighted": 0.9049231258220959
+      },
+      "disease_class": {
+        "precision": 0.45,
+        "recall": 0.002930641484858352,
+        "f1": 0.005823358136525397,
+        "roc_auc": 0.8134485572736831,
+        "average_precision": 0.23024650104571895,
+        "confusion_matrix": [
+          [
+            44657,
+            11
+          ],
+          [
+            3062,
+            9
+          ]
+        ]
+      }
+    },
+    "CatBoost": {
+      "notebook_weighted": {
+        "accuracy": 0.9354825195332956,
+        "precision_weighted": 0.9059618007461525,
+        "recall_weighted": 0.9354825195332956,
+        "f1_weighted": 0.9065473861299626
+      },
+      "disease_class": {
+        "precision": 0.46017699115044247,
+        "recall": 0.016932595245848257,
+        "f1": 0.032663316582914576,
+        "roc_auc": 0.8089458266534442,
+        "average_precision": 0.21985831477517662,
+        "confusion_matrix": [
+          [
+            44607,
+            61
+          ],
+          [
+            3019,
+            52
+          ]
+        ]
+      }
+    },
+    "Logistic Regression": {
+      "notebook_weighted": {
+        "accuracy": 0.9354615722993779,
+        "precision_weighted": 0.9045422323849642,
+        "recall_weighted": 0.9354615722993779,
+        "f1_weighted": 0.9059938083760928
+      },
+      "disease_class": {
+        "precision": 0.4418604651162791,
+        "recall": 0.012373819602735266,
+        "f1": 0.024073487488121634,
+        "roc_auc": 0.8135247407429267,
+        "average_precision": 0.22672091198299318,
+        "confusion_matrix": [
+          [
+            44620,
+            48
+          ],
+          [
+            3033,
+            38
+          ]
+        ]
+      }
+    }
+  },
+  "faithful_notebook_notes": [
+    "Unknown/refused values 7 and 9 and null rows are removed exactly as in the notebook.",
+    "The notebook maps gestational diabetes to disease and borderline/prediabetes to no disease.",
+    "The notebook's heart feature `diabetes` becomes constant 0 in cell 69; this is reproduced.",
+    "The 80s/90s figures are overall/weighted metrics on imbalanced targets, not disease-class recall."
+  ]
+}
