@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import gradio as gr
-import spaces
 
 from model_service import ModelService
 
@@ -9,7 +8,6 @@ from model_service import ModelService
 model = ModelService()
 
 
-@spaces.GPU(duration=10)
 def predict(payload: dict) -> dict:
     """Run both notebook-trained pipelines through one public Gradio endpoint."""
     if not isinstance(payload, dict):

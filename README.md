@@ -121,4 +121,10 @@ window.JADICEK_API_URL = "";
 
 Kemudian redeploy Vercel. Pada cold start, function mengunduh hanya dua file `.joblib` dari Hub dan menyimpannya pada cache sementara. Untuk deployment yang stabil, ganti `HF_MODEL_REVISION` dengan commit hash Model Hub setelah model final.
 
-Docker Space tetap tersedia sebagai opsi berbayar. Jika Space digunakan, isi `config.js` dengan alamat `https://USERNAME-jadicek-api.hf.space`.
+Space Gradio berjalan di CPU karena pipeline LightGBM tidak memerlukan GPU. Jangan
+menambahkan dekorator `@spaces.GPU` pada fungsi `predict`; dekorator tersebut memakai
+kuota ZeroGPU dan dapat membuat prediksi ditolak walaupun Space berstatus Running.
+
+Jika Space digunakan, isi `window.JADICEK_GRADIO_URL` di `config.js` dengan alamat
+`https://USERNAME-jadicek-api.hf.space`. Frontend memanggil endpoint Gradio
+`/gradio_api/call/predict` secara langsung tanpa dependensi JavaScript eksternal.

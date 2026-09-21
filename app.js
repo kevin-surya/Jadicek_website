@@ -1,19 +1,37 @@
-import { Client } from "https://cdn.jsdelivr.net/npm/@gradio/client@2.7.0/+esm";
-
-let spaceClientPromise = null;
+"use strict";
 
 async function predictFromSpace(payload) {
-  const spaceId = String(window.JADICEK_SPACE_ID || '').trim();
-  if (!spaceId) return null;
-  if (!spaceClientPromise) spaceClientPromise = Client.connect(spaceId);
-  const client = await spaceClientPromise;
-  const response = await client.predict('/predict', {payload});
-  const data = Array.isArray(response.data) ? response.data[0] : response.data;
-  if (!data || typeof data !== 'object') throw new Error('format');
-  return data;
+  const spaceUrl = String(window.JADICEK_GRADIO_URL || '').replace(/\/$/, '');
+  if (!spaceUrl) return null;
+
+  const start = await fetch(`${spaceUrl}/gradio_api/call/predict`, {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({data: [payload]}),
+    signal: AbortSignal.timeout(30000)
+  });
+  if (!start.ok) throw new Error(`space-start-${start.status}`);
+
+  const {event_id: eventId} = await start.json();
+  if (!eventId) throw new Error('space-event-id');
+
+  const result = await fetch(`${spaceUrl}/gradio_api/call/predict/${encodeURIComponent(eventId)}`, {
+    signal: AbortSignal.timeout(60000)
+  });
+  if (!result.ok) throw new Error(`space-result-${result.status}`);
+
+  const stream = await result.text();
+  const complete = stream.match(/event: complete\r?\ndata: (.+)(?:\r?\n|$)/);
+  if (!complete) {
+    const failure = stream.match(/event: error\r?\ndata: (.+)(?:\r?\n|$)/);
+    if (failure) throw new Error('space-prediction-error');
+    throw new Error('space-response-format');
+  }
+
+  const data = JSON.parse(complete[1]);
+  return Array.isArray(data) ? data[0] : data;
 }
 
-"use strict";
 const form = document.querySelector('#check-form');
 const fieldsets = [...form.querySelectorAll('fieldset')];
 const next = document.querySelector('#next');
@@ -78,9 +96,7 @@ form.addEventListener('submit', async e => {
         body:JSON.stringify(input.payload), signal:AbortSignal.timeout(30000)
       });
       if (response.ok) data = await response.json();
-      else if (response.status !== 503 && response.status !== 404 && response.status !== 405) {
-        message = 'Hasil kesehatan Anda belum dapat dihitung karena terjadi gangguan sementara. Silakan coba kembali beberapa saat lagi.';
-      }
+      else throw new Error(`api-${response.status}`);
     }
     if (data) {
       if (typeof data.diabetes_result !== 'string' || typeof data.heart_result !== 'string') throw new Error('format');
